@@ -7,6 +7,15 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <TextBlock Text="Email:" Margin="20,30,0,0" VerticalAlignment="Top"/>
+        <TextBox Text="{Binding EmailAddress, UpdateSourceTrigger=PropertyChanged}" 
+                 Margin="80,30,20,0" VerticalAlignment="Top"/>
 
+        <TextBlock Text="Password:" Margin="20,80,0,0" VerticalAlignment="Top"/>
+        <PasswordBox x:Name="PasswordBox" Margin="80,80,20,0" VerticalAlignment="Top"
+                     PasswordChanged="PasswordBox_PasswordChanged"/>
+
+        <Button Content="Login" Command="{Binding LoginCommand}" 
+                Margin="150,130,150,0" VerticalAlignment="Top"/>
     </Grid>
 </Window>
