@@ -1,35 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
-namespace Business.Models;
-
-[Table("Customer")]
-[Index("EmailAddress", Name = "UQ__Customer__49A14740179815B8", IsUnique = true)]
-public partial class Customer
+namespace Business.Models
 {
-    [Key]
-    [Column("CustomerID")]
-    public int CustomerId { get; set; }
+    public class Customer
+    {
+        public int CustomerId { get; set; }
+        public string? CustomerFullName { get; set; }
+        public string? Telephone { get; set; }
+        public string EmailAddress { get; set; } = string.Empty;
+        public DateTime? CustomerBirthday { get; set; }
+        public byte? CustomerStatus { get; set; }
+        public string? Password { get; set; }
 
-    [StringLength(50)]
-    public string? CustomerFullName { get; set; }
-
-    [StringLength(12)]
-    public string? Telephone { get; set; }
-
-    [StringLength(50)]
-    public string EmailAddress { get; set; } = null!;
-
-    public DateOnly? CustomerBirthday { get; set; }
-
-    public byte? CustomerStatus { get; set; }
-
-    [StringLength(50)]
-    public string? Password { get; set; }
-
-    [InverseProperty("Customer")]
-    public virtual ICollection<BookingReservation> BookingReservations { get; set; } = new List<BookingReservation>();
+        // Navigation Property
+        public List<BookingReservation> BookingReservations { get; set; } = new();
+    }
 }

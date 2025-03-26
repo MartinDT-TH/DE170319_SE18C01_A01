@@ -1,55 +1,34 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Input;
 using Business.Models;
-using HuynhLeDucThoWPF.Repositories;
+using Repositories;
 
-namespace HotelManagementApp.ViewModels
+namespace HuynhLeDucThoWPF.ViewModels
 {
     public class RoomTypeViewModel : INotifyPropertyChanged
     {
-        private readonly RoomTypeRepository _roomTypeRepo;
-        private ObservableCollection<RoomType> _roomTypes;
-        private RoomType? _selectedRoomType;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        public RoomTypeViewModel()
-        {
-            _roomTypeRepo = new RoomTypeRepository();
-            _roomTypes = new ObservableCollection<RoomType>(_roomTypeRepo.GetAllRoomTypes());
-
-            CreateCommand = new RelayCommand(async (_) => await ExecuteCreate(), CanExecuteCreate);
-            UpdateCommand = new RelayCommand(async (_) => await ExecuteUpdate(), CanExecuteUpdate);
-            DeleteCommand = new RelayCommand(async (_) => await ExecuteDelete(), CanExecuteDelete);
-            ClearCommand = new RelayCommand(ExecuteClear);
-        }
+        private readonly GenericRepository<RoomType> _roomTypeRepo;
+        public ObservableCollection<RoomType> RoomTypes { get; set; }
 
         public ICommand CreateCommand { get; }
         public ICommand UpdateCommand { get; }
         public ICommand DeleteCommand { get; }
         public ICommand ClearCommand { get; }
 
-        public ObservableCollection<RoomType> RoomTypes
+        public RoomTypeViewModel()
         {
-            get => _roomTypes;
-            set { _roomTypes = value; OnPropertyChanged(); }
-        }
+            _roomTypeRepo = new GenericRepository<RoomType>(new Business.Models.FuminiHotelManagementContext());
+            RoomTypes = new ObservableCollection<RoomType>(_roomTypeRepo.GetAll());
 
-        public RoomType? SelectedRoomType
-        {
-            get => _selectedRoomType;
-            set
-            {
-                _selectedRoomType = value;
-                if (value != null)
-                {
-                    RoomTypeId = value.RoomTypeId;
-                    RoomTypeName = value.RoomTypeName;
-                    TypeDescription = value.TypeDescription;
-                    TypeNote = value.TypeNote;
-                }
-                OnPropertyChanged();
-            }
+            CreateCommand = new RelayCommand(ExecuteCreate, CanExecuteCreate);
+            UpdateCommand = new RelayCommand(ExecuteUpdate, CanExecuteUpdate);
+            DeleteCommand = new RelayCommand(ExecuteDelete, CanExecuteDelete);
+            ClearCommand = new RelayCommand(ExecuteClear);
         }
 
         private int _roomTypeId;
@@ -60,96 +39,79 @@ namespace HotelManagementApp.ViewModels
         public int RoomTypeId
         {
             get => _roomTypeId;
-            set { _roomTypeId = value; OnPropertyChanged(); }
+            set { _roomTypeId = value; OnPropertyChanged(nameof(RoomTypeId)); }
         }
 
         public string RoomTypeName
         {
             get => _roomTypeName;
-            set { _roomTypeName = value; OnPropertyChanged(); }
+            set { _roomTypeName = value; OnPropertyChanged(nameof(RoomTypeName)); }
         }
 
         public string? TypeDescription
         {
             get => _typeDescription;
-            set { _typeDescription = value; OnPropertyChanged(); }
+            set { _typeDescription = value; OnPropertyChanged(nameof(TypeDescription)); }
         }
 
         public string? TypeNote
         {
             get => _typeNote;
-            set { _typeNote = value; OnPropertyChanged(); }
+            set { _typeNote = value; OnPropertyChanged(nameof(TypeNote)); }
         }
 
-        private async Task ExecuteCreate()
+        private void ExecuteCreate(object? parameter)
         {
             var newRoomType = new RoomType
             {
+                RoomTypeId = RoomTypes.Count + 1,
                 RoomTypeName = RoomTypeName,
                 TypeDescription = TypeDescription,
                 TypeNote = TypeNote
             };
 
-            if (_roomTypeRepo.AddRoomType(newRoomType))
+            _roomTypeRepo.Add(newRoomType);
+            RoomTypes.Add(newRoomType);
+            ExecuteClear(null);
+        }
+
+        private bool CanExecuteCreate(object? parameter) => !string.IsNullOrWhiteSpace(RoomTypeName);
+
+        private void ExecuteUpdate(object? parameter)
+        {
+            var existingRoomType = _roomTypeRepo.GetById(RoomTypeId);
+            if (existingRoomType != null)
             {
-                RoomTypes.Add(newRoomType);
-                ExecuteClear();
-                Console.WriteLine("Room Type Created Successfully!");
+                existingRoomType.RoomTypeName = RoomTypeName;
+                existingRoomType.TypeDescription = TypeDescription;
+                existingRoomType.TypeNote = TypeNote;
+
+                _roomTypeRepo.Update(existingRoomType);
+                ExecuteClear(null);
             }
         }
 
-        private bool CanExecuteCreate(object? parameter)
-        {
-            return !string.IsNullOrWhiteSpace(RoomTypeName);
-        }
+        private bool CanExecuteUpdate(object? parameter) => RoomTypeId > 0;
 
-        private async Task ExecuteUpdate()
+        private void ExecuteDelete(object? parameter)
         {
-            if (SelectedRoomType != null)
+            _roomTypeRepo.Delete(RoomTypeId);
+            var roomTypeToRemove = RoomTypes.FirstOrDefault(r => r.RoomTypeId == RoomTypeId);
+            if (roomTypeToRemove != null)
             {
-                SelectedRoomType.RoomTypeName = RoomTypeName;
-                SelectedRoomType.TypeDescription = TypeDescription;
-                SelectedRoomType.TypeNote = TypeNote;
-
-                if (_roomTypeRepo.UpdateRoomType(SelectedRoomType))
-                {
-                    ExecuteClear();
-                    Console.WriteLine("Room Type Updated Successfully!");
-                }
+                RoomTypes.Remove(roomTypeToRemove);
+                ExecuteClear(null);
             }
         }
 
-        private bool CanExecuteUpdate(object? parameter)
-        {
-            return RoomTypeId > 0;
-        }
+        private bool CanExecuteDelete(object? parameter) => RoomTypeId > 0;
 
-        private async Task ExecuteDelete()
-        {
-            if (SelectedRoomType != null)
-            {
-                if (_roomTypeRepo.DeleteRoomType(SelectedRoomType.RoomTypeId))
-                {
-                    RoomTypes.Remove(SelectedRoomType);
-                    ExecuteClear();
-                    Console.WriteLine("Room Type Deleted Successfully!");
-                }
-            }
-        }
-
-        private bool CanExecuteDelete(object? parameter)
-        {
-            return RoomTypeId > 0;
-        }
-
-        private void ExecuteClear(object? parameter = null)
+        private void ExecuteClear(object? parameter)
         {
             RoomTypeId = 0;
             RoomTypeName = string.Empty;
             TypeDescription = string.Empty;
             TypeNote = string.Empty;
-            SelectedRoomType = null;
-            Console.WriteLine("Room Type Form Cleared");
         }
 
         private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

@@ -1,17 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using HotelManagementApp.ViewModels;
+﻿using System.Windows;
+using HuynhLeDucThoWPF.ViewModels;
 
 namespace HuynhLeDucThoWPF.Views
 {
@@ -21,6 +9,14 @@ namespace HuynhLeDucThoWPF.Views
         {
             InitializeComponent();
             DataContext = new CustomerViewModel();
+        }
+        private void btnClose_Click(object sender, System.EventArgs e)
+        {
+            if (((LoginViewModel)DataContext).IsLoginSuccessful)
+            {
+                this.DialogResult = true; // ✅ Close and return success
+                this.Close();
+            }
         }
     }
 }

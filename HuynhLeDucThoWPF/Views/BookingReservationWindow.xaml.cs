@@ -7,18 +7,18 @@ namespace HuynhLeDucThoWPF.Views
     {
         private readonly BookingReservationViewModel _viewModel;
 
-        public BookingReservationWindow()
+        public BookingReservationWindow(BookingReservationViewModel viewModel)
         {
             InitializeComponent();
-            _viewModel = new BookingReservationViewModel();
+            _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
             DataContext = _viewModel;
         }
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            if (_viewModel.SaveCommand.CanExecute(null))
+            if (_viewModel.CreateCommand != null && _viewModel.CreateCommand.CanExecute(null))
             {
-                _viewModel.SaveCommand.Execute(null);
+                _viewModel.CreateCommand.Execute(null);
             }
         }
 

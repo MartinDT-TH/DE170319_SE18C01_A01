@@ -1,35 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
-namespace Business.Models;
-
-[PrimaryKey("BookingReservationId", "RoomId")]
-[Table("BookingDetail")]
-public partial class BookingDetail
+namespace Business.Models
 {
-    [Key]
-    [Column("BookingReservationID")]
-    public int BookingReservationId { get; set; }
+    public class BookingDetail
+    {
+        public int BookingReservationId { get; set; }
+        public int RoomId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public decimal? ActualPrice { get; set; }
 
-    [Key]
-    [Column("RoomID")]
-    public int RoomId { get; set; }
-
-    public DateOnly StartDate { get; set; }
-
-    public DateOnly EndDate { get; set; }
-
-    [Column(TypeName = "money")]
-    public decimal? ActualPrice { get; set; }
-
-    [ForeignKey("BookingReservationId")]
-    [InverseProperty("BookingDetails")]
-    public virtual BookingReservation BookingReservation { get; set; } = null!;
-
-    [ForeignKey("RoomId")]
-    [InverseProperty("BookingDetails")]
-    public virtual RoomInformation Room { get; set; } = null!;
+        // Navigation Properties
+        public BookingReservation? BookingReservation { get; set; }
+        public RoomInformation? Room { get; set; }
+    }
 }

@@ -1,29 +1,35 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Business.Models;
+using Repositories;
 
-namespace HotelManagementApp.ViewModels
+namespace HuynhLeDucThoWPF.ViewModels
 {
     public class BookingReservationViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        private readonly IRepository<BookingReservation> _bookingRepo;
 
         public ICommand CreateCommand { get; }
         public ICommand UpdateCommand { get; }
         public ICommand DeleteCommand { get; }
         public ICommand ClearCommand { get; }
 
-        public BookingReservationViewModel()
+        public BookingReservationViewModel(GenericRepository<BookingReservation> bookingRepo)
         {
-            CreateCommand = new RelayCommand(ExecuteCreate, CanExecuteCreate);
-            UpdateCommand = new RelayCommand(ExecuteUpdate, CanExecuteUpdate);
-            DeleteCommand = new RelayCommand(ExecuteDelete, CanExecuteDelete);
+            _bookingRepo = bookingRepo ?? throw new ArgumentNullException(nameof(bookingRepo));
+
+            CreateCommand = new RelayCommand(async (_) => await ExecuteCreate(), CanExecuteCreate);
+            UpdateCommand = new RelayCommand(async (_) => await ExecuteUpdate(), CanExecuteUpdate);
+            DeleteCommand = new RelayCommand(async (_) => await ExecuteDelete(), CanExecuteDelete);
             ClearCommand = new RelayCommand(ExecuteClear);
         }
 
         private int _bookingReservationId;
-        private DateTime? _bookingDate;
+        private DateOnly? _bookingDate;
         private decimal? _totalPrice;
         private int _customerId;
         private byte? _bookingStatus;
@@ -34,7 +40,7 @@ namespace HotelManagementApp.ViewModels
             set { _bookingReservationId = value; OnPropertyChanged(nameof(BookingReservationId)); }
         }
 
-        public DateTime? BookingDate
+        public DateOnly? BookingDate
         {
             get => _bookingDate;
             set { _bookingDate = value; OnPropertyChanged(nameof(BookingDate)); }
@@ -58,14 +64,80 @@ namespace HotelManagementApp.ViewModels
             set { _bookingStatus = value; OnPropertyChanged(nameof(BookingStatus)); }
         }
 
-        private void ExecuteCreate(object? parameter) => Console.WriteLine("Booking Created");
-        private bool CanExecuteCreate(object? parameter) => CustomerId > 0;
-        private void ExecuteUpdate(object? parameter) => Console.WriteLine("Booking Updated");
-        private bool CanExecuteUpdate(object? parameter) => BookingReservationId > 0;
-        private void ExecuteDelete(object? parameter) => Console.WriteLine("Booking Deleted");
-        private bool CanExecuteDelete(object? parameter) => BookingReservationId > 0;
-        private void ExecuteClear(object? parameter) => Console.WriteLine("Booking Form Cleared");
+        private async Task ExecuteCreate()
+        {
+            var newBooking = new BookingReservation
+            {
+                BookingDate = DateTime.Now,
+                TotalPrice = TotalPrice ?? 0,
+                CustomerId = CustomerId,
+                BookingStatus = BookingStatus ?? 1 // Assuming 1 = Active
+            };
 
-        private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            var createdBooking = await _bookingRepo.AddAsync(newBooking);
+            if (createdBooking is not null)
+            {
+                ExecuteClear();
+                Console.WriteLine("✅ Booking Created Successfully!");
+            }
+        }
+
+        private bool CanExecuteCreate(object? parameter) => CustomerId > 0;
+
+        private async Task ExecuteUpdate()
+        {
+            if (BookingReservationId > 0)
+            {
+                var existingBooking = await _bookingRepo.GetByIdAsync(BookingReservationId);
+                if (existingBooking is not null)
+                {
+                    existingBooking.BookingDate = BookingDate;
+                    existingBooking.TotalPrice = TotalPrice;
+                    existingBooking.CustomerId = CustomerId;
+                    existingBooking.BookingStatus = BookingStatus;
+
+                    var updatedBooking = await _bookingRepo.UpdateAsync(existingBooking);
+                    if (updatedBooking is not null)
+                    {
+                        ExecuteClear();
+                        Console.WriteLine("✅ Booking Updated Successfully!");
+                    }
+                }
+            }
+        }
+
+        private bool CanExecuteUpdate(object? parameter) => BookingReservationId > 0;
+
+        private async Task ExecuteDelete()
+        {
+            if (BookingReservationId > 0)
+            {
+                bool isDeleted = await _bookingRepo.DeleteAsync(BookingReservationId);
+                if (isDeleted)
+                {
+                    ExecuteClear();
+                    Console.WriteLine("❌ Booking Deleted Successfully!");
+                }
+            }
+        }
+
+        private bool CanExecuteDelete(object? parameter) => BookingReservationId > 0;
+
+        private void ExecuteClear(object? parameter = null)
+        {
+            BookingReservationId = 0;
+            BookingDate = null;
+            TotalPrice = null;
+            CustomerId = 0;
+            BookingStatus = null;
+
+            Console.WriteLine("🧹 Booking Form Cleared");
+        }
+
+        private void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
+

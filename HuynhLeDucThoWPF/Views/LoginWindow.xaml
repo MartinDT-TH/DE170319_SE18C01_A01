@@ -29,12 +29,12 @@
         <Label x:Name="label" Content="Login" Grid.Column="3" FontSize="36" HorizontalAlignment="Left" Width="192" Margin="8,0,0,1" Grid.Row="1" Grid.ColumnSpan="2" />
 
         <Label x:Name="label1" Content="Email" Margin ="2,2,2,2" Grid.Column="1" Grid.Row="2"/>
-        <TextBox x:Name="txtEmail" Margin ="4,4,4,4" Grid.Column="3" Grid.Row="2" Text="" TextWrapping="Wrap" Grid.ColumnSpan="2" />
+        <TextBox x:Name="txtEmail" Margin ="4,4,4,4" Grid.Column="3" Grid.Row="2" Text="{Binding EmailAddress, UpdateSourceTrigger=PropertyChanged}" TextWrapping="Wrap" Grid.ColumnSpan="2" />
 
         <Label x:Name="label2" Content="Password" Margin ="2,2,2,2" Grid.Column="1" Grid.Row="3" />
-        <TextBox x:Name="txtPassword" Margin ="4,4,4,4" Grid.Column="3" Grid.Row="3" Text="" TextWrapping="Wrap" Grid.ColumnSpan="2" />
+        <PasswordBox x:Name="PasswordBox" Margin ="4,4,4,4" Grid.Column="3" Grid.Row="3" Grid.ColumnSpan="2" />
 
-        <Button x:Name="btnLogin" Content="Login" Grid.Row="5" Grid.Column="3" Margin="8,10,52,63" RenderTransformOrigin="0.5,0.5" Click="btnLogin_Click" >
+        <Button x:Name="btnLogin" Content="Login" Grid.Row="5" Grid.Column="3" Margin="8,10,52,63" RenderTransformOrigin="0.5,0.5" Command="{Binding LoginCommand}" >
             <Button.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform ScaleY="1"/>

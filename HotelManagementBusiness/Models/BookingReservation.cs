@@ -1,32 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
-namespace Business.Models;
-
-[Table("BookingReservation")]
-public partial class BookingReservation
+namespace Business.Models
 {
-    [Key]
-    [Column("BookingReservationID")]
-    public int BookingReservationId { get; set; }
+    public class BookingReservation
+    {
+        public int BookingReservationId { get; set; }
+        public DateTime BookingDate { get; set; }
+        public decimal? TotalPrice { get; set; }
+        public int CustomerId { get; set; }
+        public byte? BookingStatus { get; set; }
 
-    public DateOnly? BookingDate { get; set; }
-
-    [Column(TypeName = "money")]
-    public decimal? TotalPrice { get; set; }
-
-    [Column("CustomerID")]
-    public int CustomerId { get; set; }
-
-    public byte? BookingStatus { get; set; }
-
-    [InverseProperty("BookingReservation")]
-    public virtual ICollection<BookingDetail> BookingDetails { get; set; } = new List<BookingDetail>();
-
-    [ForeignKey("CustomerId")]
-    [InverseProperty("BookingReservations")]
-    public virtual Customer Customer { get; set; } = null!;
+        // Navigation Properties
+        public Customer? Customer { get; set; }
+        public List<BookingDetail> BookingDetails { get; set; } = new();
+    }
 }

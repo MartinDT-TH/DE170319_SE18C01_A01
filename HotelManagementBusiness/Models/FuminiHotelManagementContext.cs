@@ -1,57 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-using Business.Models;
-namespace Business.Data;
-
-public partial class FuminiHotelManagementContext : DbContext
+﻿using Business.Models;
+namespace Business.Models
 {
-    public FuminiHotelManagementContext()
+    public class FuminiHotelManagementContext
     {
+        public List<Customer> Customers { get; set; } = new();
+        public List<RoomInformation> RoomInformations { get; set; } = new();
+        public List<RoomType> RoomTypes { get; set; } = new();
+        public List<BookingReservation> BookingReservations { get; set; } = new();
+        public List<BookingDetail> BookingDetails { get; set; } = new();
+
+        public FuminiHotelManagementContext()
+        {
+            // Add sample Room Types
+            RoomTypes.Add(new RoomType { RoomTypeId = 1, RoomTypeName = "Standard Room", TypeDescription = "Basic room with amenities." });
+            RoomTypes.Add(new RoomType { RoomTypeId = 2, RoomTypeName = "Deluxe Room", TypeDescription = "Upgraded features like a balcony." });
+
+            // Add sample Rooms
+            RoomInformations.Add(new RoomInformation { RoomId = 1, RoomNumber = "101", RoomTypeId = 1, RoomPricePerDay = 100 });
+            RoomInformations.Add(new RoomInformation { RoomId = 2, RoomNumber = "202", RoomTypeId = 2, RoomPricePerDay = 150 });
+
+            // Add sample Customers
+            Customers.Add(new Customer { CustomerId = 1, CustomerFullName = "Alice Johnson", EmailAddress = "alice@example.com", CustomerStatus = 1 });
+            Customers.Add(new Customer { CustomerId = 2, CustomerFullName = "Bob Smith", EmailAddress = "bob@example.com", CustomerStatus = 1 });
+
+            // Add sample Booking Reservations
+            BookingReservations.Add(new BookingReservation { BookingReservationId = 1, CustomerId = 1, BookingDate = DateTime.Today, BookingStatus = 1 });
+            BookingReservations.Add(new BookingReservation { BookingReservationId = 2, CustomerId = 2, BookingDate = DateTime.Today, BookingStatus = 1 });
+
+            // Add sample Booking Details
+            BookingDetails.Add(new BookingDetail { BookingReservationId = 1, RoomId = 1, StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(3), ActualPrice = 300 });
+            BookingDetails.Add(new BookingDetail { BookingReservationId = 2, RoomId = 2, StartDate = DateTime.Today, EndDate = DateTime.Today.AddDays(2), ActualPrice = 300 });
+        }
+
+        public void SaveChanges()
+        {
+            // No need to implement for List<T>
+        }
     }
 
-    public FuminiHotelManagementContext(DbContextOptions<FuminiHotelManagementContext> options)
-        : base(options)
-    {
-    }
-
-    public virtual DbSet<BookingDetail> BookingDetails { get; set; }
-
-    public virtual DbSet<BookingReservation> BookingReservations { get; set; }
-
-    public virtual DbSet<Customer> Customers { get; set; }
-
-    public virtual DbSet<RoomInformation> RoomInformations { get; set; }
-
-    public virtual DbSet<RoomType> RoomTypes { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=.,1433;Database=FUMiniHotelManagement;User Id=sa;Password=123;TrustServerCertificate=True;Encrypt=false;");
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<BookingDetail>(entity =>
-        {
-            entity.HasOne(d => d.BookingReservation).WithMany(p => p.BookingDetails).HasConstraintName("FK_BookingDetail_BookingReservation");
-
-            entity.HasOne(d => d.Room).WithMany(p => p.BookingDetails).HasConstraintName("FK_BookingDetail_RoomInformation");
-        });
-
-        modelBuilder.Entity<BookingReservation>(entity =>
-        {
-            entity.Property(e => e.BookingReservationId).ValueGeneratedNever();
-
-            entity.HasOne(d => d.Customer).WithMany(p => p.BookingReservations).HasConstraintName("FK_BookingReservation_Customer");
-        });
-
-        modelBuilder.Entity<RoomInformation>(entity =>
-        {
-            entity.HasOne(d => d.RoomType).WithMany(p => p.RoomInformations).HasConstraintName("FK_RoomInformation_RoomType");
-        });
-
-        OnModelCreatingPartial(modelBuilder);
-    }
-
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }

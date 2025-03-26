@@ -1,13 +1,19 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Input;
 using Business.Models;
+using Repositories;
 
-namespace HotelManagementApp.ViewModels
+namespace HuynhLeDucThoWPF.ViewModels
 {
     public class RoomInformationViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
+
+        private readonly GenericRepository<RoomInformation> _roomRepo;
+        public ObservableCollection<RoomInformation> RoomInformations { get; set; }
 
         public ICommand CreateCommand { get; }
         public ICommand UpdateCommand { get; }
@@ -16,6 +22,9 @@ namespace HotelManagementApp.ViewModels
 
         public RoomInformationViewModel()
         {
+            _roomRepo = new GenericRepository<RoomInformation>(new Business.Models.FuminiHotelManagementContext());
+            RoomInformations = new ObservableCollection<RoomInformation>(_roomRepo.GetAll());
+
             CreateCommand = new RelayCommand(ExecuteCreate, CanExecuteCreate);
             UpdateCommand = new RelayCommand(ExecuteUpdate, CanExecuteUpdate);
             DeleteCommand = new RelayCommand(ExecuteDelete, CanExecuteDelete);
@@ -72,12 +81,58 @@ namespace HotelManagementApp.ViewModels
             set { _roomPricePerDay = value; OnPropertyChanged(nameof(RoomPricePerDay)); }
         }
 
-        private void ExecuteCreate(object? parameter) => Console.WriteLine("Room Created: " + RoomNumber);
+        private void ExecuteCreate(object? parameter)
+        {
+            var newRoom = new RoomInformation
+            {
+                RoomId = RoomInformations.Count + 1,
+                RoomNumber = RoomNumber,
+                RoomDetailDescription = RoomDetailDescription,
+                RoomMaxCapacity = RoomMaxCapacity,
+                RoomTypeId = RoomTypeId,
+                RoomStatus = RoomStatus,
+                RoomPricePerDay = RoomPricePerDay
+            };
+
+            _roomRepo.Add(newRoom);
+            RoomInformations.Add(newRoom);
+            ExecuteClear(null);
+        }
+
         private bool CanExecuteCreate(object? parameter) => !string.IsNullOrWhiteSpace(RoomNumber);
-        private void ExecuteUpdate(object? parameter) => Console.WriteLine("Room Updated: " + RoomId);
+
+        private void ExecuteUpdate(object? parameter)
+        {
+            var existingRoom = _roomRepo.GetById(RoomId);
+            if (existingRoom != null)
+            {
+                existingRoom.RoomNumber = RoomNumber;
+                existingRoom.RoomDetailDescription = RoomDetailDescription;
+                existingRoom.RoomMaxCapacity = RoomMaxCapacity;
+                existingRoom.RoomTypeId = RoomTypeId;
+                existingRoom.RoomStatus = RoomStatus;
+                existingRoom.RoomPricePerDay = RoomPricePerDay;
+
+                _roomRepo.Update(existingRoom);
+                ExecuteClear(null);
+            }
+        }
+
         private bool CanExecuteUpdate(object? parameter) => RoomId > 0;
-        private void ExecuteDelete(object? parameter) => Console.WriteLine("Room Deleted: " + RoomId);
+
+        private void ExecuteDelete(object? parameter)
+        {
+            _roomRepo.Delete(RoomId);
+            var roomToRemove = RoomInformations.FirstOrDefault(r => r.RoomId == RoomId);
+            if (roomToRemove != null)
+            {
+                RoomInformations.Remove(roomToRemove);
+                ExecuteClear(null);
+            }
+        }
+
         private bool CanExecuteDelete(object? parameter) => RoomId > 0;
+
         private void ExecuteClear(object? parameter)
         {
             RoomId = 0;
@@ -87,7 +142,6 @@ namespace HotelManagementApp.ViewModels
             RoomTypeId = 0;
             RoomStatus = null;
             RoomPricePerDay = null;
-            Console.WriteLine("Room Form Cleared");
         }
 
         private void OnPropertyChanged(string propertyName) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
